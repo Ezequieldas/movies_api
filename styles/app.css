@@ -1,4 +1,8 @@
-* { box-sizing: border-box; }
+* { 
+  box-sizing: border-box;
+  overflow-x: hidden;
+
+ }
 
 :root {
   --purple-light-1: #FBFAFB;
@@ -126,8 +130,8 @@ button {
 }
 
 .header-container--long {
-  background-image: url('https://pics.filmaffinity.com/Deadpool-777527803-large.jpg');
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 19.27%, rgba(0, 0, 0, 0) 29.17%), url(https://pics.filmaffinity.com/Deadpool-777527803-large.jpg);
+  background-image: url('');
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 19.27%, rgba(0, 0, 0, 0) 29.17%), url(https://pics.filmaffinity.com/);
   background-size: cover !important;
   height: 480px;
   position: fixed;
@@ -207,11 +211,39 @@ button {
   height: 225px;
   min-height: 225px;
   max-height: 225px;
-  width: 150px;
+  width: 50px;
   min-width: 150px;
   max-width: 150px;
 }
 
+@media screen and (min-width: 768px){
+  .trendingPreview-movieList {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    height: 100%;
+  }
+
+  .trendingPreview-movieList .movie-container .movie-img {
+    height: 300px;
+    min-height: 300px;
+    max-height: 300px;
+    min-width: 200px;
+    max-width: 200px;
+  }
+
+  .header-title {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .header-searchForm input {
+    width: 40%;
+  }
+}
 
 /* Categories */
 .category-container {
