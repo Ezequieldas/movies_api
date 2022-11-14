@@ -8,8 +8,23 @@ const api = axios.create({
   },
 });
 
-function createMovies(movies, container) {
-  container.innerHTML = "";
+const lazyLoader = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      const url = entry.target.getAttribute("data-img");
+      entry.target.setAttribute("src", url);
+    }
+  });
+});
+
+function createMovies(
+  movies,
+  container,
+  { lazyLoad = false, clean = true } = {}
+) {
+  if (clean) {
+    container.innerHTML = "";
+  }
 
   movies.forEach((movie) => {
     const movieContainer = document.createElement("div");
@@ -22,9 +37,19 @@ function createMovies(movies, container) {
     movieImg.classList.add("movie-img");
     movieImg.setAttribute("alt", movie.title);
     movieImg.setAttribute(
-      "src",
+      lazyLoad ? "data-img" : "src",
       "https://image.tmdb.org/t/p/w300/" + movie.poster_path
     );
+    movieImg.addEventListener("error", () => {
+      movieImg.setAttribute(
+        "src",
+        "https://img.freepik.com/free-vector/oops-404-error-with-broken-robot-concept-illustration_114360-5529.jpg?w=2000"
+      );
+    });
+
+    if (lazyLoad) {
+      lazyLoader.observe(movieImg);
+    }
 
     movieContainer.appendChild(movieImg);
     container.appendChild(movieContainer);
@@ -56,7 +81,7 @@ async function getTrendingMoviesPreview() {
   const { data } = await api("trending/movie/day");
   const movies = data.results;
 
-  createMovies(movies, trendingMoviesPreviewList);
+  createMovies(movies, trendingMoviesPreviewList, true);
 }
 
 async function getCategoriesPreview() {
@@ -75,8 +100,9 @@ async function getMoviesByCategory(id) {
   });
 
   const movies = data.results;
+  maxPage = data.total_pages;
 
-  createMovies(movies, genericSection);
+  createMovies(movies, genericSection, { lazyLoad: true });
 }
 
 async function getMoviesBySearch(query) {
@@ -87,6 +113,8 @@ async function getMoviesBySearch(query) {
   });
 
   const movies = data.results;
+  maxPage = data.total_pages;
+  console.log(maxPage);
 
   createMovies(movies, genericSection);
 }
@@ -94,14 +122,40 @@ async function getMoviesBySearch(query) {
 async function getTrendingMovies() {
   const { data } = await api("trending/movie/day");
   const movies = data.results;
+  maxPage = data.total_pages;
 
-  createMovies(movies, genericSection);
+  createMovies(movies, genericSection, {
+    lazyLoad: true,
+    clean: true,
+  });
+}
+
+async function getPaginatedTrendingMovies() {
+  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+  const isScrollBottom = scrollTop + clientHeight >= scrollHeight - 15;
+  const isPageMax = page < maxPage;
+
+  if (isScrollBottom && isPageMax) {
+    page++;
+    const { data } = await api("trending/movie/day", {
+      params: {
+        page,
+      },
+    });
+    const movies = data.results;
+
+    createMovies(movies, genericSection, {
+      lazyLoad: true,
+      clean: false,
+    });
+  }
 }
 
 async function getMovieById(id) {
   const { data: movie } = await api("movie/" + id);
 
-  const movieImgUrl = 'https://image.tmdb.org/t/p/w500' + movie.poster_path;
+  const movieImgUrl = "https://image.tmdb.org/t/p/w500" + movie.poster_path;
   headerSection.style.background = `
   linear-gradient(
     180deg, rgba(0, 0, 0, 0.35) 19.27%, 
@@ -117,9 +171,63 @@ async function getMovieById(id) {
   getRelatedMoviesById(id);
 }
 
-async function getRelatedMoviesById(id){
+async function getRelatedMoviesById(id) {
   const { data } = await api(`movie/${id}/recommendations`);
   const relatedMovies = data.results;
 
-  createMovies(relatedMovies, relatedMoviesContainer)
+  createMovies(relatedMovies, relatedMoviesContainer);
+}
+
+function getPaginatedMoviesBySearch(query) {
+  return async function () {
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+    const isScrollBottom = scrollTop + clientHeight >= scrollHeight - 15;
+    const isPageMax = page < maxPage;
+
+    if (isScrollBottom && isPageMax) {
+      page++;
+      const { data } = await api("search/movie", {
+        params: {
+          query,
+          page,
+        },
+      });
+
+      const movies = data.results;
+
+      createMovies(movies, genericSection, {
+        lazyLoad: true,
+        clean: false,
+      });
+    }
+  };
+}
+
+function getPaginatedMoviesByCategory(id) {
+  return async function () {
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+    const isScrollBottom = scrollTop + clientHeight >= scrollHeight - 15;
+    const isPageMax = page < maxPage;
+
+    if (isScrollBottom && isPageMax) {
+      page++;
+      const { data } = await api("discover/movie", {
+        params: {
+          with_genres: id,
+          page,
+        },
+      });
+      const movies = data.results;
+
+      createMovies(
+        movies, 
+        genericSection, 
+      {
+        lazyLoad: true,
+        clean: false,
+      });
+    }
+  };
 }
