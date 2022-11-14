@@ -29,9 +29,6 @@ function createMovies(
   movies.forEach((movie) => {
     const movieContainer = document.createElement("div");
     movieContainer.classList.add("movie-container");
-    movieContainer.addEventListener("click", () => {
-      location.hash = "#movie=" + movie.id;
-    });
 
     const movieImg = document.createElement("img");
     movieImg.classList.add("movie-img");
@@ -40,6 +37,9 @@ function createMovies(
       lazyLoad ? "data-img" : "src",
       "https://image.tmdb.org/t/p/w300/" + movie.poster_path
     );
+    movieImg.addEventListener("click", () => {
+      location.hash = "#movie=" + movie.id;
+    });
     movieImg.addEventListener("error", () => {
       movieImg.setAttribute(
         "src",
@@ -47,11 +47,18 @@ function createMovies(
       );
     });
 
+    const movieBtn = document.createElement("button");
+    movieBtn.classList.add("movie-btn");
+    movieBtn.addEventListener("click", () => {
+      movieBtn.classList.toggle("movie-btn--liked");
+    });
+
     if (lazyLoad) {
       lazyLoader.observe(movieImg);
     }
 
     movieContainer.appendChild(movieImg);
+    movieContainer.appendChild(movieBtn);
     container.appendChild(movieContainer);
   });
 }
@@ -221,10 +228,7 @@ function getPaginatedMoviesByCategory(id) {
       });
       const movies = data.results;
 
-      createMovies(
-        movies, 
-        genericSection, 
-      {
+      createMovies(movies, genericSection, {
         lazyLoad: true,
         clean: false,
       });
