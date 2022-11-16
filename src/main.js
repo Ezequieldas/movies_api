@@ -5,8 +5,40 @@ const api = axios.create({
   },
   params: {
     api_key: "e64855de57cabfc6e8da668d11c3f2bc",
+    "language": navigator.language || "es-ES"
   },
 });
+
+function likedMovieList (){
+  const item = JSON.parse(localStorage.getItem('liked_movies'));
+  let movies;
+
+  if (item) {
+    movies = item;
+  } else {
+    movies = {};
+  }
+
+  return movies;
+}
+
+function likeMovie(movie){
+
+  const likedMovies = likedMovieList();
+
+  if (likedMovies[movie.id]){
+
+    likedMovies[movie.id] = undefined
+
+  } else {
+
+    likedMovies[movie.id] = movie;
+
+  }
+
+  localStorage.setItem('liked_movies', JSON.stringify(likedMovies));
+
+}
 
 const lazyLoader = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
@@ -49,8 +81,12 @@ function createMovies(
 
     const movieBtn = document.createElement("button");
     movieBtn.classList.add("movie-btn");
+    likedMovieList()[movie.id] && movieBtn.classList.add("movie-btn--liked");
     movieBtn.addEventListener("click", () => {
       movieBtn.classList.toggle("movie-btn--liked");
+      likeMovie(movie);
+      getLikedMovies()
+
     });
 
     if (lazyLoad) {
@@ -121,7 +157,6 @@ async function getMoviesBySearch(query) {
 
   const movies = data.results;
   maxPage = data.total_pages;
-  console.log(maxPage);
 
   createMovies(movies, genericSection);
 }
@@ -234,4 +269,11 @@ function getPaginatedMoviesByCategory(id) {
       });
     }
   };
+}
+
+function getLikedMovies(params) {
+  const likedMovies = likedMovieList();
+  const moviesArray = Object.values(likedMovies);
+
+  createMovies( moviesArray, likedMoviesList, { lazyLoad: true, clean: true }) 
 }

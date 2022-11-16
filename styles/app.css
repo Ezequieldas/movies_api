@@ -235,6 +235,10 @@ button {
   width: 100%;
 }
 
+.liked-movieList {
+  width: 100%;
+}
+
 .liked-img-container {
   display: grid;
   grid-template-columns: repeat(5, 20%);
